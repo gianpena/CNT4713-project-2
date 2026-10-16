@@ -88,6 +88,10 @@ class TCPServerRequestHandler(socketserver.BaseRequestHandler):
                         active_users.pop(username, None)
                         broadcast(quit_msg)
                         break
+                    elif command.startswith("list"):
+                        files = ", ".join(f"{item.name}.{item.suffix}" for item in Path("./"))
+                        msg = f"200\n\n{files}\0".encode("utf-8")
+                        data_socket.sendall(msg)
 
                 available_ports.appendleft(next_data_port)
                 data_socket.close()
