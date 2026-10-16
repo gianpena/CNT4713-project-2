@@ -13,6 +13,15 @@ def broadcast(msg):
         except OSError:
             active_users.pop(username, None)
 
+def read(socket):
+    pieces = [b'']
+    total = 0
+    while b'\0' not in pieces[-1] and total < 1048576:
+        pieces.append(socket.recv(128))
+        total += len(pieces[-1])
+    data = b''.join(pieces).decode("utf-8").strip("\0")
+    return data
+
 class TCPServerRequestHandler(socketserver.BaseRequestHandler):
     def handle(self):
         ip = self.request.getpeername()[0]
@@ -27,14 +36,7 @@ class TCPServerRequestHandler(socketserver.BaseRequestHandler):
                 username = ""
 
                 while True:
-                    pieces = [b'']
-                    total = 0
-                    while b'\0' not in pieces[-1] and total < 4096:
-                        pieces.append(self.request.recv(128))
-                        total += len(pieces[-1])
-        
-                    data = b''.join(pieces)
-                    command = data.decode("utf-8").strip("\0")
+                    command = read(self.request)
                     
                     if command.startswith("login"):
                         username = command.split()[1]
