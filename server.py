@@ -104,6 +104,15 @@ class TCPServerRequestHandler(socketserver.BaseRequestHandler):
                                 data_socket.sendall(f"200\0".encode("utf-8"))
                         except OSError:
                             data_socket.sendall(f"500\0".encode("utf-8"))
+                    elif command.startswith("retr"):
+                        _, filename = command.split()
+                        try:
+                            with open(f"./{filename}", "rb") as file:
+                                contents = file.read()
+                                encoded_contents = base64.b64encode(contents)
+                                data_socket.sendall(b"200\n\n%b\0" % (encoded_contents))
+                        except OSError:
+                            data_socket.sendall(f"500\0".encode("utf-8"))
 
                 available_ports.appendleft(next_data_port)
                 data_socket.close()
