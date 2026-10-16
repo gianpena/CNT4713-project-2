@@ -113,6 +113,13 @@ class TCPServerRequestHandler(socketserver.BaseRequestHandler):
                                 data_socket.sendall(b"200\n\n%b\0" % (encoded_contents))
                         except OSError:
                             data_socket.sendall(f"500\0".encode("utf-8"))
+                    elif command.startswith("dele"):
+                        _, filename = command.split()
+                        try:
+                            Path(f"./{filename}").unlink(missing_ok=True)
+                            data_socket.sendall(f"200\0".encode("utf-8"))
+                        except OSError:
+                            data_socket.sendall(f"500\0".encode("utf-8"))
 
                 available_ports.appendleft(next_data_port)
                 data_socket.close()
