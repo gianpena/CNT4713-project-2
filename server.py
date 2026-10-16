@@ -1,4 +1,4 @@
-import socketserver, socket, sys, re, time
+import socketserver, socket, sys, re, time, base64
 socketserver.ThreadingTCPServer.allow_reuse_address = True
 from collections import deque
 from pathlib import Path
@@ -94,6 +94,16 @@ class TCPServerRequestHandler(socketserver.BaseRequestHandler):
                         files = ", ".join(f"{item.name}.{item.suffix}" for item in Path("./"))
                         msg = f"200\n\n{files}\0".encode("utf-8")
                         data_socket.sendall(msg)
+                    elif command.startswith("stor"):
+                        _, filename = command.split()
+                        file_contents = read(data_socket)
+                        file_contents_decoded = base64.b64decode(file_contents).decode("utf-8")
+                        try:
+                            with open(f"./{filename}", "w", encoding="utf-8") as file:
+                                file.write(file_contents_decoded)
+                                data_socket.sendall(f"200\0".encode("utf-8"))
+                        except OSError:
+                            data_socket.sendall(f"500\0".encode("utf-8"))
 
                 available_ports.appendleft(next_data_port)
                 data_socket.close()
