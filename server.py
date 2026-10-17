@@ -91,15 +91,15 @@ class TCPServerRequestHandler(socketserver.BaseRequestHandler):
                         broadcast(quit_msg)
                         break
                     elif command.startswith("list"):
-                        files = ", ".join(f"{item.name}.{item.suffix}" for item in Path("./"))
+                        files = ", ".join(item.name for item in Path("./").iterdir() if item.is_file())
                         msg = f"200\n\n{files}\0".encode("utf-8")
                         data_socket.sendall(msg)
                     elif command.startswith("stor"):
                         _, filename = command.split()
                         file_contents = read(data_socket)
-                        file_contents_decoded = base64.b64decode(file_contents).decode("utf-8")
+                        file_contents_decoded = base64.b64decode(file_contents)
                         try:
-                            with open(f"./{filename}", "w", encoding="utf-8") as file:
+                            with open(f"./{filename}", "wb") as file:
                                 file.write(file_contents_decoded)
                                 data_socket.sendall(f"200\0".encode("utf-8"))
                         except OSError:
